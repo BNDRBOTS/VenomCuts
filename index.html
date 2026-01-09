@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VENOM CUTS - High precision barber shop in Downtown Phoenix. Razor work, skin fades, no walk-ins. Book your slot.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="VENOM CUTS | PHX">
+    <meta property="og:description" content="Sharper than a serpent's tooth. Downtown Phoenix.">
+    <meta property="og:type" content="website">
+    
+    <title>VENOM | PHX</title>
+    
+    <!-- FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik+Wet+Paint&family=Archivo+Black&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- TAILWIND -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- GSAP & LENIS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.0.45/dist/lenis.min.js"></script>
+
+    <style>
+        :root {
+            --black: #050505;
+            --white: #ececec;
+            --acid: #D7FF00;
+            --paint-red: #ff3333;
+        }
+
+        /* --- CORE SETTINGS --- */
+        body {
+            background-color: var(--black);
+            color: var(--white);
+            font-family: 'Space Mono', monospace;
+            overflow-x: hidden;
+            /* REMOVED 'perspective' from here to fix stacking context issue */
+            width: 100vw;
+            min-height: 100vh;
+        }
+
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+
+        .graffiti-font { font-family: 'Rubik Wet Paint', cursive; }
+        .block-font { font-family: 'Archivo Black', sans-serif; text-transform: uppercase; }
+
+        /* 3D TEXT ENGINE */
+        .hero-stage { 
+            perspective: 1000px; /* Perspective applied ONLY here */
+            transform-style: preserve-3d; 
+        }
+        .word-3d { display: inline-block; transform-style: preserve-3d; white-space: nowrap; }
+        .char-3d {
+            display: inline-block;
+            transform-style: preserve-3d;
+            transition: transform 0.1s cubic-bezier(0.2, 0, 0.2, 1);
+            color: var(--white);
+            text-shadow: 
+                1px 1px 0px #333,
+                2px 2px 0px #333,
+                3px 3px 0px #333,
+                4px 4px 0px #333,
+                5px 5px 0px var(--acid),
+                6px 6px 0px var(--acid),
+                10px 10px 20px rgba(0,0,0,0.8);
+        }
+
+        .scrim-overlay {
+            background: linear-gradient(90deg, #000 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 100%);
+        }
+
+        .btn-tag {
+            background: var(--acid);
+            color: black;
+            font-family: 'Rubik Wet Paint', cursive;
+            padding: 12px 24px;
+            transform: rotate(-2deg);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-block;
+            font-size: 1.2rem;
+            cursor: pointer; 
+        }
+        .btn-tag:hover { transform: rotate(2deg) scale(1.1); }
+
+        .slip-row { border-bottom: 1px dashed #333; transition: background 0.1s; }
+        .slip-row:hover { background: #111; }
+        .slip-row:last-child { border-bottom: 1px solid #333; }
+
+        /* --- CUSTOM CURSOR LOGIC --- */
+        .cursor-spray {
+            width: 20px;
+            height: 20px;
+            background: var(--acid);
+            position: fixed;
+            pointer-events: none; /* Crucial: lets clicks pass through */
+            z-index: 2147483647; /* Maximum Safe Integer for Z-Index */
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%); /* Centers the dot */
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--acid), 0 0 20px var(--acid);
+            transition: width 0.2s, height 0.2s, background-color 0.2s, transform 0.1s;
+            will-change: transform, top, left; /* Performance optimization */
+        }
+
+        /* --- DEVICE SPECIFIC CURSOR BEHAVIOR --- */
+        
+        /* DESKTOP: Hide system cursor, show spray cursor */
+        @media (min-width: 769px) {
+            * {
+                cursor: none !important;
+            }
+            .cursor-spray {
+                display: block;
+            }
+        }
+
+        /* MOBILE: Show system cursor, hide spray cursor completely */
+        @media (max-width: 768px) {
+            * {
+                cursor: auto !important;
+            }
+            .cursor-spray {
+                display: none !important;
+            }
+            .btn-tag, a, button {
+                cursor: pointer !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAV -->
+    <nav class="fixed top-0 left-0 w-full z-50 p-4 md:p-6 flex justify-between items-center mix-blend-difference pointer-events-none select-none">
+        <div class="block-font text-xl tracking-tighter pointer-events-auto cursor-none-target">VN/CTS</div>
+        <div class="text-xs font-mono text-right pointer-events-auto cursor-none-target">
+            <span class="text-[#D7FF00] animate-pulse">● LIVE</span><br>
+            PHX_AZ
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <header class="relative w-full h-screen flex flex-col justify-center items-center overflow-hidden hero-stage pb-[20vh]" id="hero">
+        <div class="absolute inset-0 z-0 opacity-20 pointer-events-none" style="background-image: url('https://www.transparenttextures.com/patterns/concrete-wall.png');"></div>
+        
+        <div class="relative z-10 text-center select-none cursor-default pointer-events-none" id="text-container">
+            <h1 class="text-[18vw] leading-[0.8] graffiti-font text-white" aria-label="VENOM CUTS">
+                <span class="word-3d">VENOM</span><br>
+                <span class="word-3d text-[#D7FF00]" style="text-shadow: 1px 1px 0 #fff, 2px 2px 0 #fff, 3px 3px 0 #fff, 4px 4px 0 #000, 5px 5px 0 #000 !important;">CUTS</span>
+            </h1>
+        </div>
+        
+        <div class="absolute bottom-12 text-center z-30 pointer-events-auto">
+            <p class="font-mono text-xs text-gray-500 mb-4 tracking-widest uppercase select-none md:block hidden">Move Cursor</p>
+            <p class="font-mono text-xs text-gray-500 mb-4 tracking-widest uppercase select-none md:hidden block">Rotate Device</p>
+            <a href="#roster" class="btn-tag text-sm cursor-none-target">GET IN LINE</a>
+        </div>
+    </header>
+
+    <!-- ROSTER SECTION -->
+    <section id="roster" class="bg-[#050505] py-20 relative z-20">
+        
+        <!-- BARBER 1 (VIPER) -->
+        <div class="relative w-full h-[80vh] md:h-[90vh] flex items-center overflow-hidden group border-y border-[#222]">
+            <div class="absolute inset-0 z-0">
+                <img src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?q=80&w=1000&auto=format&fit=crop" 
+                     class="w-full h-full object-cover grayscale transition-transform duration-700 group-hover:scale-105" 
+                     alt="Barber Viper using straight razor">
+            </div>
+            <div class="absolute inset-0 z-10 scrim-overlay pointer-events-none"></div>
+            <div class="relative z-20 px-8 md:px-20 w-full max-w-4xl pointer-events-none select-none">
+                <span class="bg-black text-white font-mono text-xs px-2 py-1 mb-4 inline-block">STATION_01</span>
+                <h2 class="text-7xl md:text-9xl block-font text-white mb-2 leading-none" style="-webkit-text-stroke: 1px #333;">VIPER</h2>
+                <div class="border-l-4 border-[#D7FF00] pl-6 mt-6">
+                    <p class="text-2xl md:text-3xl graffiti-font text-[#D7FF00] mb-2">RAZOR SPECIALIST</p>
+                    <p class="font-mono text-gray-300 max-w-md text-sm md:text-base">
+                        Don't ask for a chat. Viper works in silence. Precision throat shaves and geometric beard sculpting.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- BARBER 2 (GHOST) -->
+        <div class="relative w-full h-[80vh] md:h-[90vh] flex items-center justify-end overflow-hidden group border-b border-[#222]">
+            <div class="absolute inset-0 z-0">
+                <img src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=1000&auto=format&fit=crop" 
+                     class="w-full h-full object-cover grayscale brightness-75 transition-transform duration-700 group-hover:scale-105" 
+                     alt="Barber Ghost heavily tattooed">
+            </div>
+
+            <div class="absolute inset-0 z-10 pointer-events-none" style="background: linear-gradient(270deg, #000 0%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0) 100%);"></div>
+
+            <div class="relative z-20 px-8 md:px-20 w-full max-w-4xl text-right pointer-events-none select-none">
+                <span class="bg-black text-white font-mono text-xs px-2 py-1 mb-4 inline-block">STATION_02</span>
+                <h2 class="text-7xl md:text-9xl block-font text-white mb-2 leading-none" style="-webkit-text-stroke: 1px #333;">GHOST</h2>
+                <div class="border-r-4 border-[#ff3333] pr-6 mt-6 flex flex-col items-end">
+                    <p class="text-2xl md:text-3xl graffiti-font text-[#ff3333] mb-2">FADES & SKULLS</p>
+                    <p class="font-mono text-gray-300 max-w-md text-sm md:text-base">
+                        Booked out weeks in advance. If you see an open slot, take it. No refunds if you move during the cut.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- BETTING SLIP GRID -->
+    <section id="grid" class="bg-[#050505] py-24 px-4 md:px-12 min-h-[50vh] relative z-20 select-none">
+        <div class="max-w-4xl mx-auto">
+            <div class="flex items-end justify-between mb-8">
+                <h2 class="block-font text-4xl md:text-5xl uppercase text-white">The Slip</h2>
+                <span class="font-mono text-xs text-gray-500">LIVE DATABASE_V2.0</span>
+            </div>
+
+            <div class="border border-[#333] bg-[#0a0a0a]">
+                <!-- Header -->
+                <div class="grid grid-cols-4 md:grid-cols-5 p-3 border-b border-[#333] font-mono text-[10px] md:text-xs text-gray-500 uppercase tracking-widest select-none">
+                    <div class="col-span-1">Time</div>
+                    <div class="col-span-2 md:col-span-2">Barber / Type</div>
+                    <div class="hidden md:block col-span-1">Price</div>
+                    <div class="col-span-1 text-right">Action</div>
+                </div>
+
+                <!-- ROW 1: Active -->
+                <div class="grid grid-cols-4 md:grid-cols-5 p-4 slip-row items-center font-mono group cursor-none-target" onclick="openModal('VIPER', '13:00')">
+                    <div class="col-span-1 text-[#D7FF00] font-bold">13:00</div>
+                    <div class="col-span-2 md:col-span-2">
+                        <span class="block text-white font-bold">VIPER</span>
+                        <span class="text-xs text-gray-500">RAZOR / BEARD</span>
+                    </div>
+                    <div class="hidden md:block col-span-1 text-gray-400">$60.00</div>
+                    <div class="col-span-1 text-right">
+                        <span class="bg-[#333] text-white text-[10px] px-2 py-1 group-hover:bg-[#D7FF00] group-hover:text-black transition-colors uppercase font-bold">Bet</span>
+                    </div>
+                </div>
+
+                <!-- ROW 2: Sold -->
+                <div class="grid grid-cols-4 md:grid-cols-5 p-4 slip-row items-center font-mono opacity-40 pointer-events-none select-none">
+                    <div class="col-span-1 text-gray-600 line-through">14:15</div>
+                    <div class="col-span-2 md:col-span-2">
+                        <span class="block text-gray-500 font-bold">GHOST</span>
+                        <span class="text-xs text-gray-600">FADE</span>
+                    </div>
+                    <div class="hidden md:block col-span-1 text-gray-600">$55.00</div>
+                    <div class="col-span-1 text-right">
+                        <span class="border border-red-900 text-red-900 text-[10px] px-2 py-1">SOLD</span>
+                    </div>
+                </div>
+
+                <!-- ROW 3: Active -->
+                <div class="grid grid-cols-4 md:grid-cols-5 p-4 slip-row items-center font-mono group cursor-none-target" onclick="openModal('TANK', '15:00')">
+                    <div class="col-span-1 text-[#D7FF00] font-bold">15:00</div>
+                    <div class="col-span-2 md:col-span-2">
+                        <span class="block text-white font-bold">TANK</span>
+                        <span class="text-xs text-gray-500">CLASSIC CUT</span>
+                    </div>
+                    <div class="hidden md:block col-span-1 text-gray-400">$45.00</div>
+                    <div class="col-span-1 text-right">
+                        <span class="bg-[#333] text-white text-[10px] px-2 py-1 group-hover:bg-[#D7FF00] group-hover:text-black transition-colors uppercase font-bold">Bet</span>
+                    </div>
+                </div>
+
+                 <!-- ROW 4: Active -->
+                 <div class="grid grid-cols-4 md:grid-cols-5 p-4 slip-row items-center font-mono group cursor-none-target" onclick="openModal('VIPER', '16:30')">
+                    <div class="col-span-1 text-[#D7FF00] font-bold">16:30</div>
+                    <div class="col-span-2 md:col-span-2">
+                        <span class="block text-white font-bold">VIPER</span>
+                        <span class="text-xs text-gray-500">RAZOR</span>
+                    </div>
+                    <div class="hidden md:block col-span-1 text-gray-400">$60.00</div>
+                    <div class="col-span-1 text-right">
+                        <span class="bg-[#333] text-white text-[10px] px-2 py-1 group-hover:bg-[#D7FF00] group-hover:text-black transition-colors uppercase font-bold">Bet</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-6">
+                <p class="font-mono text-[10px] text-gray-600">ALL BETS FINAL. NO REFUNDS. NO WALK-INS.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-black py-8 border-t border-[#111] text-center relative z-20">
+        <h3 class="graffiti-font text-4xl text-[#333] hover:text-[#D7FF00] transition-colors cursor-default select-none">VENOM</h3>
+    </footer>
+
+    <!-- LEGAL/DEMO DISCLAIMER -->
+    <div class="bg-black border-t border-[#111] py-4 px-4 text-center relative z-20">
+        <p class="font-mono text-[9px] md:text-[10px] text-[#444] uppercase tracking-widest leading-relaxed">
+            BNDR LLC DEMO SITE — Not a real business. For demonstration purposes only.<br>
+            Sites can be tailored to specific customer needs.
+        </p>
+    </div>
+
+    <!-- MODAL -->
+    <div id="bookingModal" class="fixed inset-0 z-[100] bg-black/95 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="w-full max-w-md border border-[#D7FF00] p-8 relative bg-black shadow-[0_0_30px_rgba(215,255,0,0.1)]">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-white hover:text-[#D7FF00] font-mono cursor-none-target">[X]</button>
+            <h3 class="text-4xl graffiti-font text-white mb-6 text-center select-none">LOCK IT IN</h3>
+            <div class="border border-[#333] p-4 mb-6 font-mono text-sm">
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-500">TARGET</span>
+                    <span id="modalBarber" class="text-[#D7FF00]">...</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">TIME</span>
+                    <span id="modalTime" class="text-white">...</span>
+                </div>
+            </div>
+            <button class="w-full bg-[#D7FF00] text-black font-black text-lg py-3 hover:bg-white transition-colors uppercase font-mono cursor-none-target">
+                CONFIRM CUT
+            </button>
+        </div>
+    </div>
+
+    <!-- 
+      ELITE FIX: 
+      Moved cursor div to the very end of DOM to ensure it paints last 
+      regardless of Z-Index battles in complex stacking contexts.
+    -->
+    <div class="cursor-spray"></div>
+
+    <script>
+        // --- 1. 3D TEXT ENGINE ---
+        const words = document.querySelectorAll('.word-3d');
+        words.forEach(word => {
+            const text = word.textContent;
+            word.textContent = '';
+            text.split('').forEach((char, index) => {
+                const span = document.createElement('span');
+                span.textContent = char;
+                span.className = 'char-3d';
+                span.style.display = 'inline-block';
+                word.appendChild(span);
+            });
+        });
+
+        // --- 2. CURSOR & INTERACTION LOGIC (OPTIMIZED) ---
+        const cursor = document.querySelector('.cursor-spray');
+        
+        // Performance: Use requestAnimationFrame for cursor movement
+        let mouseX = 0;
+        let mouseY = 0;
+        let isMoving = false;
+
+        document.addEventListener('mousemove', (e) => {
+            // Hard Mobile Check: Stop execution if mobile to save battery/cpu
+            if (window.innerWidth <= 768) return;
+
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+
+            if (!isMoving) {
+                isMoving = true;
+                requestAnimationFrame(updateCursor);
+            }
+            
+            // 3D Text Rotation Logic (kept simple in event loop for responsiveness)
+            const xNorm = (e.clientX / window.innerWidth - 0.5) * 2;
+            const yNorm = (e.clientY / window.innerHeight - 0.5) * 2;
+            
+            // Limit query selector calls for performance (optional refinement)
+            const chars = document.querySelectorAll('.char-3d');
+            chars.forEach((char, index) => {
+                const factor = 10 + (index % 3) * 5; 
+                const rotateX = -yNorm * factor;
+                const rotateY = xNorm * factor;
+                char.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(${Math.abs(xNorm*30)}px)`;
+            });
+        });
+
+        function updateCursor() {
+            if(cursor) {
+                cursor.style.top = mouseY + 'px';
+                cursor.style.left = mouseX + 'px';
+            }
+            isMoving = false;
+        }
+
+        // --- 3. SCROLL & MODAL ---
+        const lenis = new Lenis();
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // Modal Logic
+        const modal = document.getElementById('bookingModal');
+        const modalBarber = document.getElementById('modalBarber');
+        const modalTime = document.getElementById('modalTime');
+        
+        window.openModal = function(barber, time) {
+            modalBarber.innerText = barber;
+            modalTime.innerText = time;
+            modal.classList.remove('hidden');
+        }
+        
+        window.closeModal = function() {
+            modal.classList.add('hidden');
+        }
+        
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+        // Cursor Interactive States (Hover effects)
+        const targets = document.querySelectorAll('.cursor-none-target');
+        if(cursor) {
+            targets.forEach(t => {
+                t.addEventListener('mouseenter', () => {
+                    if (window.innerWidth <= 768) return;
+                    cursor.style.transform = 'translate(-50%, -50%) scale(2.5)';
+                    cursor.style.boxShadow = '0 0 20px #fff';
+                    cursor.style.backgroundColor = '#fff';
+                });
+                t.addEventListener('mouseleave', () => {
+                    if (window.innerWidth <= 768) return;
+                    cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+                    cursor.style.boxShadow = '0 0 10px var(--acid)';
+                    cursor.style.backgroundColor = 'var(--acid)';
+                });
+            });
+        }
+    </script>
+</body>
+</html>
