@@ -1,14 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="antialiased">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="VENOM CUTS - High precision barber shop in Downtown Phoenix. Razor work, skin fades, no walk-ins. Book your slot.">
-    <meta name="robots" content="index, follow">
-    <meta property="og:title" content="VENOM CUTS | PHX">
-    <meta property="og:description" content="Sharper than a serpent's tooth. Downtown Phoenix.">
-    <meta property="og:type" content="website">
-    
+    <meta name="theme-color" content="#050505">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval';">
     <title>VENOM | PHX</title>
     
     <!-- FONTS -->
@@ -22,410 +19,572 @@
     <!-- GSAP & LENIS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <script src="https://unpkg.com/lenis@1.0.45/dist/lenis.min.js"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.34/dist/lenis.min.js"></script>
 
     <style>
         :root {
             --black: #050505;
             --white: #ececec;
             --acid: #D7FF00;
+            --acid-glow: rgba(215, 255, 0, 0.4);
             --paint-red: #ff3333;
+            --ui-border: rgba(255, 255, 255, 0.1);
         }
 
-        /* --- CORE SETTINGS --- */
         body {
             background-color: var(--black);
             color: var(--white);
             font-family: 'Space Mono', monospace;
             overflow-x: hidden;
-            /* REMOVED 'perspective' from here to fix stacking context issue */
             width: 100vw;
-            min-height: 100vh;
+            overscroll-behavior: none;
         }
 
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        /* Cursor Management - Hardened Media Queries */
+        @media (min-width: 769px) {
+            body, a, button, [role="button"], .interactive-target { cursor: none !important; }
+            .cursor-dot, .cursor-ring { display: block; }
+        }
+        @media (max-width: 768px) {
+            body, a, button, [role="button"], .interactive-target { cursor: auto !important; }
+            .cursor-dot, .cursor-ring { display: none !important; }
+        }
+
+        ::selection { background: var(--acid); color: var(--black); }
+        ::-webkit-scrollbar { display: none; }
 
         .graffiti-font { font-family: 'Rubik Wet Paint', cursive; }
         .block-font { font-family: 'Archivo Black', sans-serif; text-transform: uppercase; }
 
-        /* 3D TEXT ENGINE */
+        .noise-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            mix-blend-mode: overlay;
+        }
+
         .hero-stage { 
-            perspective: 1000px; /* Perspective applied ONLY here */
+            perspective: 1200px; 
             transform-style: preserve-3d; 
         }
-        .word-3d { display: inline-block; transform-style: preserve-3d; white-space: nowrap; }
+        .word-3d { 
+            display: inline-block; 
+            transform-style: preserve-3d; 
+            white-space: nowrap; 
+        }
         .char-3d {
             display: inline-block;
             transform-style: preserve-3d;
-            transition: transform 0.1s cubic-bezier(0.2, 0, 0.2, 1);
+            will-change: transform;
             color: var(--white);
             text-shadow: 
-                1px 1px 0px #333,
-                2px 2px 0px #333,
-                3px 3px 0px #333,
-                4px 4px 0px #333,
+                1px 1px 0px #222,
+                2px 2px 0px #222,
+                3px 3px 0px #222,
+                4px 4px 0px #222,
                 5px 5px 0px var(--acid),
                 6px 6px 0px var(--acid),
-                10px 10px 20px rgba(0,0,0,0.8);
-        }
-
-        .scrim-overlay {
-            background: linear-gradient(90deg, #000 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 100%);
+                12px 12px 25px rgba(0,0,0,0.9);
         }
 
         .btn-tag {
             background: var(--acid);
-            color: black;
+            color: var(--black);
             font-family: 'Rubik Wet Paint', cursive;
-            padding: 12px 24px;
+            padding: 14px 28px;
             transform: rotate(-2deg);
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             display: inline-block;
             font-size: 1.2rem;
-            cursor: pointer; 
+            box-shadow: 0 0 20px rgba(215, 255, 0, 0);
         }
-        .btn-tag:hover { transform: rotate(2deg) scale(1.1); }
+        .btn-tag:hover, .btn-tag:focus-visible { 
+            transform: rotate(1deg) scale(1.05); 
+            box-shadow: 0 0 20px var(--acid-glow);
+            outline: none;
+        }
 
-        .slip-row { border-bottom: 1px dashed #333; transition: background 0.1s; }
-        .slip-row:hover { background: #111; }
-        .slip-row:last-child { border-bottom: 1px solid #333; }
+        .slip-row { 
+            border-bottom: 1px dashed var(--ui-border); 
+            transition: background 0.3s ease, padding 0.3s ease; 
+        }
+        .slip-row:hover:not(.sold), .slip-row:focus-visible:not(.sold) { 
+            background: rgba(255,255,255,0.03); 
+            padding-left: 1.5rem;
+            border-left: 2px solid var(--acid);
+            outline: none;
+        }
+        .slip-row:last-child { border-bottom: 1px solid var(--ui-border); }
+        .slip-row.sold { opacity: 0.4; filter: grayscale(100%); pointer-events: none; }
 
-        /* --- CUSTOM CURSOR LOGIC --- */
-        .cursor-spray {
-            width: 20px;
-            height: 20px;
-            background: var(--acid);
+        .interactive-target:focus-visible {
+            outline: 2px solid var(--acid);
+            outline-offset: 4px;
+        }
+
+        /* Cursor Base CSS */
+        .cursor-dot, .cursor-ring {
             position: fixed;
-            pointer-events: none; /* Crucial: lets clicks pass through */
-            z-index: 2147483647; /* Maximum Safe Integer for Z-Index */
-            top: 0;
-            left: 0;
-            transform: translate(-50%, -50%); /* Centers the dot */
+            top: 0; left: 0;
+            pointer-events: none;
+            z-index: 2147483647;
+            will-change: transform;
+        }
+        .cursor-dot {
+            width: 8px; height: 8px;
+            background: var(--acid);
             border-radius: 50%;
-            box-shadow: 0 0 10px var(--acid), 0 0 20px var(--acid);
-            transition: width 0.2s, height 0.2s, background-color 0.2s, transform 0.1s;
-            will-change: transform, top, left; /* Performance optimization */
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
         }
-
-        /* --- DEVICE SPECIFIC CURSOR BEHAVIOR --- */
+        .cursor-ring {
+            width: 40px; height: 40px;
+            border: 1px solid var(--acid);
+            border-radius: 50%;
+            transition: width 0.3s, height 0.3s, background-color 0.3s, border-color 0.3s;
+        }
         
-        /* DESKTOP: Hide system cursor, show spray cursor */
-        @media (min-width: 769px) {
-            * {
-                cursor: none !important;
-            }
-            .cursor-spray {
-                display: block;
-            }
+        /* Interactive States */
+        .cursor-hover .cursor-dot { width: 0; height: 0; }
+        .cursor-hover .cursor-ring {
+            width: 60px; height: 60px;
+            background: rgba(215, 255, 0, 0.1);
+            backdrop-filter: blur(2px);
+            border-color: transparent;
         }
 
-        /* MOBILE: Show system cursor, hide spray cursor completely */
-        @media (max-width: 768px) {
-            * {
-                cursor: auto !important;
-            }
-            .cursor-spray {
-                display: none !important;
-            }
-            .btn-tag, a, button {
-                cursor: pointer !important;
-            }
+        .glitch-text { position: relative; }
+        .glitch-text::before, .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: var(--black);
+        }
+        .glitch-text::before {
+            left: 2px; text-shadow: -1px 0 red;
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+        .glitch-text::after {
+            left: -2px; text-shadow: -1px 0 blue;
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim 2.5s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% { clip: rect(20px, 9999px, 86px, 0); }
+            5% { clip: rect(31px, 9999px, 8px, 0); }
+            10% { clip: rect(74px, 9999px, 11px, 0); }
+            15% { clip: rect(100px, 9999px, 73px, 0); }
+            20% { clip: rect(6px, 9999px, 93px, 0); }
+            25% { clip: rect(23px, 9999px, 44px, 0); }
+            30% { clip: rect(51px, 9999px, 5px, 0); }
+            100% { clip: rect(51px, 9999px, 5px, 0); }
         }
     </style>
 </head>
 <body>
 
-    <!-- NAV -->
-    <nav class="fixed top-0 left-0 w-full z-50 p-4 md:p-6 flex justify-between items-center mix-blend-difference pointer-events-none select-none">
-        <div class="block-font text-xl tracking-tighter pointer-events-auto cursor-none-target">VN/CTS</div>
-        <div class="text-xs font-mono text-right pointer-events-auto cursor-none-target">
-            <span class="text-[#D7FF00] animate-pulse">● LIVE</span><br>
-            PHX_AZ
+    <!-- Cinematic Noise Overlay -->
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <nav class="fixed top-0 left-0 w-full z-50 p-6 flex justify-between items-start mix-blend-difference pointer-events-none select-none">
+        <div class="block-font text-2xl tracking-tighter pointer-events-auto interactive-target" tabindex="0">VN/CTS</div>
+        <div class="text-xs font-mono text-right pointer-events-auto">
+            <div class="flex items-center justify-end gap-2 mb-1">
+                <div class="w-2 h-2 rounded-full bg-[#D7FF00] animate-pulse shadow-[0_0_8px_#D7FF00]"></div>
+                <span class="tracking-widest">SYSTEM ONLINE</span>
+            </div>
+            <span class="text-gray-400">PHX_AZ // 33.4484° N</span>
         </div>
     </nav>
 
-    <!-- HERO SECTION -->
-    <header class="relative w-full h-screen flex flex-col justify-center items-center overflow-hidden hero-stage pb-[20vh]" id="hero">
-        <div class="absolute inset-0 z-0 opacity-20 pointer-events-none" style="background-image: url('https://www.transparenttextures.com/patterns/concrete-wall.png');"></div>
+    <header class="relative w-full h-screen flex flex-col justify-center items-center overflow-hidden hero-stage" id="hero">
+        <div class="absolute inset-0 z-0 opacity-10" aria-hidden="true"
+             style="background-image: linear-gradient(var(--ui-border) 1px, transparent 1px), linear-gradient(90deg, var(--ui-border) 1px, transparent 1px); background-size: 40px 40px; transform: perspective(500px) rotateX(60deg) scale(2) translateY(-100px);">
+        </div>
         
-        <div class="relative z-10 text-center select-none cursor-default pointer-events-none" id="text-container">
-            <h1 class="text-[18vw] leading-[0.8] graffiti-font text-white" aria-label="VENOM CUTS">
+        <div class="relative z-10 text-center select-none pointer-events-none w-full" id="text-container">
+            <h1 class="text-[20vw] md:text-[18vw] leading-[0.75] graffiti-font text-white" aria-label="VENOM CUTS">
                 <span class="word-3d">VENOM</span><br>
                 <span class="word-3d text-[#D7FF00]" style="text-shadow: 1px 1px 0 #fff, 2px 2px 0 #fff, 3px 3px 0 #fff, 4px 4px 0 #000, 5px 5px 0 #000 !important;">CUTS</span>
             </h1>
         </div>
         
-        <div class="absolute bottom-12 text-center z-30 pointer-events-auto">
-            <p class="font-mono text-xs text-gray-500 mb-4 tracking-widest uppercase select-none md:block hidden">Move Cursor</p>
-            <p class="font-mono text-xs text-gray-500 mb-4 tracking-widest uppercase select-none md:hidden block">Rotate Device</p>
-            <a href="#roster" class="btn-tag text-sm cursor-none-target">GET IN LINE</a>
+        <div class="absolute bottom-12 w-full px-6 flex justify-between items-end z-30 pointer-events-none">
+            <div class="font-mono text-[10px] text-gray-500 tracking-widest uppercase hidden md:block">
+                SYS.REQ: <span class="text-white">Move Cursor</span><br>
+                ENG: <span class="text-white">Active</span>
+            </div>
+            <a href="#grid" class="btn-tag text-sm pointer-events-auto interactive-target mx-auto md:mx-0">
+                ACCESS THE SLIP
+            </a>
+            <div class="font-mono text-[10px] text-gray-500 tracking-widest uppercase text-right hidden md:block">
+                SCROLL<br>
+                <span class="text-[#D7FF00]">↓ DESCEND</span>
+            </div>
         </div>
     </header>
 
-    <!-- ROSTER SECTION -->
-    <section id="roster" class="bg-[#050505] py-20 relative z-20">
-        
+    <section id="roster" class="bg-[#050505] relative z-20">
         <!-- BARBER 1 (VIPER) -->
-        <div class="relative w-full h-[80vh] md:h-[90vh] flex items-center overflow-hidden group border-y border-[#222]">
-            <div class="absolute inset-0 z-0">
-                <img src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?q=80&w=1000&auto=format&fit=crop" 
-                     class="w-full h-full object-cover grayscale transition-transform duration-700 group-hover:scale-105" 
-                     alt="Barber Viper using straight razor">
+        <div class="roster-panel relative w-full h-[85vh] flex items-center overflow-hidden border-y border-[#111]">
+            <div class="absolute inset-0 z-0 bg-black">
+                <img src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?q=80&w=1600&auto=format&fit=crop" 
+                     class="parallax-bg w-full h-full object-cover grayscale opacity-60" 
+                     alt="Viper Station">
             </div>
-            <div class="absolute inset-0 z-10 scrim-overlay pointer-events-none"></div>
-            <div class="relative z-20 px-8 md:px-20 w-full max-w-4xl pointer-events-none select-none">
-                <span class="bg-black text-white font-mono text-xs px-2 py-1 mb-4 inline-block">STATION_01</span>
-                <h2 class="text-7xl md:text-9xl block-font text-white mb-2 leading-none" style="-webkit-text-stroke: 1px #333;">VIPER</h2>
-                <div class="border-l-4 border-[#D7FF00] pl-6 mt-6">
-                    <p class="text-2xl md:text-3xl graffiti-font text-[#D7FF00] mb-2">RAZOR SPECIALIST</p>
-                    <p class="font-mono text-gray-300 max-w-md text-sm md:text-base">
-                        Don't ask for a chat. Viper works in silence. Precision throat shaves and geometric beard sculpting.
+            <div class="absolute inset-0 z-10 bg-gradient-to-r from-black via-black/80 to-transparent pointer-events-none"></div>
+            
+            <div class="relative z-20 px-6 md:px-24 w-full max-w-6xl pointer-events-none select-none">
+                <div class="overflow-hidden mb-4">
+                    <span class="reveal-text inline-block bg-black text-white font-mono text-xs px-3 py-1 border border-[#333]">STATION_01</span>
+                </div>
+                <div class="overflow-hidden">
+                    <h2 class="reveal-title text-7xl md:text-[10rem] block-font text-transparent mb-2 leading-none" style="-webkit-text-stroke: 2px #fff;">VIPER</h2>
+                </div>
+                <div class="border-l-2 border-[#D7FF00] pl-6 mt-6 reveal-content">
+                    <p class="text-2xl md:text-4xl graffiti-font text-[#D7FF00] mb-4 tracking-wide">RAZOR SPECIALIST</p>
+                    <p class="font-mono text-gray-400 max-w-md text-sm md:text-base leading-relaxed">
+                        Precision throat shaves. Geometric beard sculpting. No chatter. Viper isolates the geometry of your bone structure and executes with surgical intent.
                     </p>
                 </div>
             </div>
         </div>
 
         <!-- BARBER 2 (GHOST) -->
-        <div class="relative w-full h-[80vh] md:h-[90vh] flex items-center justify-end overflow-hidden group border-b border-[#222]">
-            <div class="absolute inset-0 z-0">
-                <img src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=1000&auto=format&fit=crop" 
-                     class="w-full h-full object-cover grayscale brightness-75 transition-transform duration-700 group-hover:scale-105" 
-                     alt="Barber Ghost heavily tattooed">
+        <div class="roster-panel relative w-full h-[85vh] flex items-center justify-end overflow-hidden border-b border-[#111]">
+            <div class="absolute inset-0 z-0 bg-black">
+                <img src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=1600&auto=format&fit=crop" 
+                     class="parallax-bg w-full h-full object-cover grayscale opacity-50" 
+                     alt="Ghost Station">
             </div>
+            <div class="absolute inset-0 z-10 bg-gradient-to-l from-black via-black/90 to-transparent pointer-events-none"></div>
 
-            <div class="absolute inset-0 z-10 pointer-events-none" style="background: linear-gradient(270deg, #000 0%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0) 100%);"></div>
-
-            <div class="relative z-20 px-8 md:px-20 w-full max-w-4xl text-right pointer-events-none select-none">
-                <span class="bg-black text-white font-mono text-xs px-2 py-1 mb-4 inline-block">STATION_02</span>
-                <h2 class="text-7xl md:text-9xl block-font text-white mb-2 leading-none" style="-webkit-text-stroke: 1px #333;">GHOST</h2>
-                <div class="border-r-4 border-[#ff3333] pr-6 mt-6 flex flex-col items-end">
-                    <p class="text-2xl md:text-3xl graffiti-font text-[#ff3333] mb-2">FADES & SKULLS</p>
-                    <p class="font-mono text-gray-300 max-w-md text-sm md:text-base">
-                        Booked out weeks in advance. If you see an open slot, take it. No refunds if you move during the cut.
+            <div class="relative z-20 px-6 md:px-24 w-full max-w-6xl text-right pointer-events-none select-none flex flex-col items-end">
+                <div class="overflow-hidden mb-4">
+                    <span class="reveal-text inline-block bg-black text-white font-mono text-xs px-3 py-1 border border-[#333]">STATION_02</span>
+                </div>
+                <div class="overflow-hidden">
+                    <h2 class="reveal-title text-7xl md:text-[10rem] block-font text-transparent mb-2 leading-none" style="-webkit-text-stroke: 2px #fff;">GHOST</h2>
+                </div>
+                <div class="border-r-2 border-[#ff3333] pr-6 mt-6 reveal-content flex flex-col items-end">
+                    <p class="text-2xl md:text-4xl graffiti-font text-[#ff3333] mb-4 tracking-wide">FADES & SKULLS</p>
+                    <p class="font-mono text-gray-400 max-w-md text-sm md:text-base leading-relaxed text-right">
+                        Booked out weeks in advance. If you see an open slot on the slip, take it. Warning: Zero tolerance for moving in the chair.
                     </p>
                 </div>
             </div>
         </div>
-
     </section>
 
-    <!-- BETTING SLIP GRID -->
-    <section id="grid" class="bg-[#050505] py-24 px-4 md:px-12 min-h-[50vh] relative z-20 select-none">
-        <div class="max-w-4xl mx-auto">
-            <div class="flex items-end justify-between mb-8">
-                <h2 class="block-font text-4xl md:text-5xl uppercase text-white">The Slip</h2>
-                <span class="font-mono text-xs text-gray-500">LIVE DATABASE_V2.0</span>
+    <section id="grid" class="bg-[#050505] py-32 px-4 md:px-12 relative z-20 select-none">
+        <div class="max-w-5xl mx-auto">
+            <div class="flex items-end justify-between mb-12 border-b border-[#222] pb-6">
+                <div>
+                    <h2 class="block-font text-5xl md:text-7xl uppercase text-white leading-none">The Slip</h2>
+                    <p class="font-mono text-sm text-gray-500 mt-2">SECURE YOUR BLOCK.</p>
+                </div>
+                <div class="text-right">
+                    <span class="font-mono text-xs text-[#D7FF00] bg-[#D7FF00]/10 px-2 py-1 rounded">LIVE DB_SYNC</span>
+                </div>
             </div>
 
-            <div class="border border-[#333] bg-[#0a0a0a]">
+            <div class="border border-[#222] bg-[#030303] shadow-2xl">
                 <!-- Header -->
-                <div class="grid grid-cols-4 md:grid-cols-5 p-3 border-b border-[#333] font-mono text-[10px] md:text-xs text-gray-500 uppercase tracking-widest select-none">
-                    <div class="col-span-1">Time</div>
-                    <div class="col-span-2 md:col-span-2">Barber / Type</div>
-                    <div class="hidden md:block col-span-1">Price</div>
-                    <div class="col-span-1 text-right">Action</div>
+                <div class="grid grid-cols-4 md:grid-cols-12 p-4 border-b border-[#222] font-mono text-[10px] text-gray-400 uppercase tracking-widest bg-[#080808]">
+                    <div class="col-span-1 md:col-span-2">T-Minus</div>
+                    <div class="col-span-2 md:col-span-5">Operative / Directive</div>
+                    <div class="hidden md:block md:col-span-3">Exchange</div>
+                    <div class="col-span-1 md:col-span-2 text-right">Status</div>
                 </div>
 
-                <!-- ROW 1: Active -->
-                <div class="grid grid-cols-4 md:grid-cols-5 p-4 slip-row items-center font-mono group cursor-none-target" onclick="openModal('VIPER', '13:00')">
-                    <div class="col-span-1 text-[#D7FF00] font-bold">13:00</div>
-                    <div class="col-span-2 md:col-span-2">
-                        <span class="block text-white font-bold">VIPER</span>
-                        <span class="text-xs text-gray-500">RAZOR / BEARD</span>
+                <!-- Database Rows -->
+                <div class="grid grid-cols-4 md:grid-cols-12 p-5 slip-row items-center font-mono interactive-target" role="button" tabindex="0" aria-label="Book Viper at 13:00 for $60" data-barber="VIPER" data-time="13:00" data-price="$60">
+                    <div class="col-span-1 md:col-span-2 text-[#D7FF00] font-bold text-lg">13:00</div>
+                    <div class="col-span-2 md:col-span-5 min-w-0">
+                        <span class="block text-white font-bold text-xl mb-1 truncate">VIPER</span>
+                        <span class="text-xs text-gray-400 bg-[#111] px-2 py-0.5 rounded-sm inline-block">RAZOR / BEARD</span>
                     </div>
-                    <div class="hidden md:block col-span-1 text-gray-400">$60.00</div>
-                    <div class="col-span-1 text-right">
-                        <span class="bg-[#333] text-white text-[10px] px-2 py-1 group-hover:bg-[#D7FF00] group-hover:text-black transition-colors uppercase font-bold">Bet</span>
-                    </div>
-                </div>
-
-                <!-- ROW 2: Sold -->
-                <div class="grid grid-cols-4 md:grid-cols-5 p-4 slip-row items-center font-mono opacity-40 pointer-events-none select-none">
-                    <div class="col-span-1 text-gray-600 line-through">14:15</div>
-                    <div class="col-span-2 md:col-span-2">
-                        <span class="block text-gray-500 font-bold">GHOST</span>
-                        <span class="text-xs text-gray-600">FADE</span>
-                    </div>
-                    <div class="hidden md:block col-span-1 text-gray-600">$55.00</div>
-                    <div class="col-span-1 text-right">
-                        <span class="border border-red-900 text-red-900 text-[10px] px-2 py-1">SOLD</span>
+                    <div class="hidden md:block md:col-span-3 text-gray-400 font-bold">$60.00</div>
+                    <div class="col-span-1 md:col-span-2 text-right">
+                        <span class="inline-block bg-white text-black text-xs px-4 py-2 font-bold uppercase w-full md:w-auto text-center" aria-hidden="true">LOCK</span>
                     </div>
                 </div>
 
-                <!-- ROW 3: Active -->
-                <div class="grid grid-cols-4 md:grid-cols-5 p-4 slip-row items-center font-mono group cursor-none-target" onclick="openModal('TANK', '15:00')">
-                    <div class="col-span-1 text-[#D7FF00] font-bold">15:00</div>
-                    <div class="col-span-2 md:col-span-2">
-                        <span class="block text-white font-bold">TANK</span>
-                        <span class="text-xs text-gray-500">CLASSIC CUT</span>
+                <div class="grid grid-cols-4 md:grid-cols-12 p-5 slip-row sold items-center font-mono" aria-label="Ghost at 14:15, Unavailable">
+                    <div class="col-span-1 md:col-span-2 text-gray-400 line-through text-lg">14:15</div>
+                    <div class="col-span-2 md:col-span-5 min-w-0">
+                        <span class="block text-gray-400 font-bold text-xl mb-1 truncate">GHOST</span>
+                        <span class="text-xs text-gray-400 border border-[#222] px-2 py-0.5 rounded-sm inline-block">SKIN FADE</span>
                     </div>
-                    <div class="hidden md:block col-span-1 text-gray-400">$45.00</div>
-                    <div class="col-span-1 text-right">
-                        <span class="bg-[#333] text-white text-[10px] px-2 py-1 group-hover:bg-[#D7FF00] group-hover:text-black transition-colors uppercase font-bold">Bet</span>
+                    <div class="hidden md:block md:col-span-3 text-gray-400 font-bold">$55.00</div>
+                    <div class="col-span-1 md:col-span-2 text-right">
+                        <span class="inline-block border border-red-500/50 text-red-500 text-xs px-4 py-2 w-full md:w-auto text-center" aria-hidden="true">VOID</span>
                     </div>
                 </div>
 
-                 <!-- ROW 4: Active -->
-                 <div class="grid grid-cols-4 md:grid-cols-5 p-4 slip-row items-center font-mono group cursor-none-target" onclick="openModal('VIPER', '16:30')">
-                    <div class="col-span-1 text-[#D7FF00] font-bold">16:30</div>
-                    <div class="col-span-2 md:col-span-2">
-                        <span class="block text-white font-bold">VIPER</span>
-                        <span class="text-xs text-gray-500">RAZOR</span>
+                <div class="grid grid-cols-4 md:grid-cols-12 p-5 slip-row items-center font-mono interactive-target" role="button" tabindex="0" aria-label="Book Tank at 15:00 for $45" data-barber="TANK" data-time="15:00" data-price="$45">
+                    <div class="col-span-1 md:col-span-2 text-[#D7FF00] font-bold text-lg">15:00</div>
+                    <div class="col-span-2 md:col-span-5 min-w-0">
+                        <span class="block text-white font-bold text-xl mb-1 truncate">TANK</span>
+                        <span class="text-xs text-gray-400 bg-[#111] px-2 py-0.5 rounded-sm inline-block">HEAVY DUTY</span>
                     </div>
-                    <div class="hidden md:block col-span-1 text-gray-400">$60.00</div>
-                    <div class="col-span-1 text-right">
-                        <span class="bg-[#333] text-white text-[10px] px-2 py-1 group-hover:bg-[#D7FF00] group-hover:text-black transition-colors uppercase font-bold">Bet</span>
+                    <div class="hidden md:block md:col-span-3 text-gray-400 font-bold">$45.00</div>
+                    <div class="col-span-1 md:col-span-2 text-right">
+                        <span class="inline-block bg-white text-black text-xs px-4 py-2 font-bold uppercase w-full md:w-auto text-center" aria-hidden="true">LOCK</span>
+                    </div>
+                </div>
+
+                 <div class="grid grid-cols-4 md:grid-cols-12 p-5 slip-row items-center font-mono interactive-target" role="button" tabindex="0" aria-label="Book Viper at 16:30 for $60" data-barber="VIPER" data-time="16:30" data-price="$60">
+                    <div class="col-span-1 md:col-span-2 text-[#D7FF00] font-bold text-lg">16:30</div>
+                    <div class="col-span-2 md:col-span-5 min-w-0">
+                        <span class="block text-white font-bold text-xl mb-1 truncate">VIPER</span>
+                        <span class="text-xs text-gray-400 bg-[#111] px-2 py-0.5 rounded-sm inline-block">RAZOR ONLY</span>
+                    </div>
+                    <div class="hidden md:block md:col-span-3 text-gray-400 font-bold">$60.00</div>
+                    <div class="col-span-1 md:col-span-2 text-right">
+                        <span class="inline-block bg-white text-black text-xs px-4 py-2 font-bold uppercase w-full md:w-auto text-center" aria-hidden="true">LOCK</span>
                     </div>
                 </div>
             </div>
             
-            <div class="text-center mt-6">
-                <p class="font-mono text-[10px] text-gray-600">ALL BETS FINAL. NO REFUNDS. NO WALK-INS.</p>
+            <div class="text-center mt-8 opacity-50 hover:opacity-100 transition-opacity">
+                <p class="font-mono text-[10px] text-white tracking-widest">ALL PROTOCOLS FINAL. NO REFUNDS. NO WALK-INS.</p>
             </div>
         </div>
     </section>
 
-    <!-- FOOTER -->
-    <footer class="bg-black py-8 border-t border-[#111] text-center relative z-20">
-        <h3 class="graffiti-font text-4xl text-[#333] hover:text-[#D7FF00] transition-colors cursor-default select-none">VENOM</h3>
+    <footer class="bg-black py-12 border-t border-[#111] text-center relative z-20 overflow-hidden">
+        <h3 class="graffiti-font text-[12vw] leading-none text-[#111] hover:text-[#D7FF00] transition-colors duration-700 cursor-default select-none whitespace-nowrap">VENOM CUTS</h3>
     </footer>
 
-    <!-- LEGAL/DEMO DISCLAIMER -->
-    <div class="bg-black border-t border-[#111] py-4 px-4 text-center relative z-20">
-        <p class="font-mono text-[9px] md:text-[10px] text-[#444] uppercase tracking-widest leading-relaxed">
-            BNDR LLC DEMO SITE — Not a real business. For demonstration purposes only.<br>
-            Sites can be tailored to specific customer needs.
-        </p>
-    </div>
+    <!-- Booking Modal with Accessibility Hooks -->
+    <div id="bookingModal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 opacity-0 pointer-events-none" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="w-full max-w-lg border border-[#333] bg-[#050505] shadow-[0_0_50px_rgba(215,255,0,0.05)] transform scale-95 relative overflow-hidden modal-content">
+            
+            <div class="absolute inset-0 pointer-events-none opacity-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] z-10" aria-hidden="true"></div>
 
-    <!-- MODAL -->
-    <div id="bookingModal" class="fixed inset-0 z-[100] bg-black/95 hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="w-full max-w-md border border-[#D7FF00] p-8 relative bg-black shadow-[0_0_30px_rgba(215,255,0,0.1)]">
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-white hover:text-[#D7FF00] font-mono cursor-none-target">[X]</button>
-            <h3 class="text-4xl graffiti-font text-white mb-6 text-center select-none">LOCK IT IN</h3>
-            <div class="border border-[#333] p-4 mb-6 font-mono text-sm">
-                <div class="flex justify-between mb-2">
-                    <span class="text-gray-500">TARGET</span>
-                    <span id="modalBarber" class="text-[#D7FF00]">...</span>
+            <div class="p-8 relative z-20">
+                <button id="closeModalBtn" class="absolute top-4 right-4 text-gray-500 hover:text-white font-mono interactive-target text-sm" aria-label="Close modal">[ ABORT ]</button>
+                
+                <h3 id="modalTitle" class="text-3xl block-font text-white mb-8 text-center select-none glitch-text mt-4" data-text="AUTHORIZE CUT">AUTHORIZE CUT</h3>
+                
+                <div class="space-y-4 font-mono text-sm mb-8" aria-live="polite">
+                    <div class="flex justify-between items-end border-b border-[#222] pb-2">
+                        <span class="text-gray-400 text-xs tracking-widest uppercase">Operative</span>
+                        <span id="modalBarber" class="text-white font-bold text-xl">...</span>
+                    </div>
+                    <div class="flex justify-between items-end border-b border-[#222] pb-2">
+                        <span class="text-gray-400 text-xs tracking-widest uppercase">Time_Slot</span>
+                        <span id="modalTime" class="text-[#D7FF00] font-bold text-xl">...</span>
+                    </div>
+                     <div class="flex justify-between items-end border-b border-[#222] pb-2">
+                        <span class="text-gray-400 text-xs tracking-widest uppercase">Exchange</span>
+                        <span id="modalPrice" class="text-white font-bold text-xl">...</span>
+                    </div>
                 </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-500">TIME</span>
-                    <span id="modalTime" class="text-white">...</span>
-                </div>
+
+                <button class="w-full bg-white text-black font-black text-lg py-4 hover:bg-[#D7FF00] transition-colors uppercase font-mono interactive-target tracking-widest">
+                    CONFIRM & TRANSMIT
+                </button>
             </div>
-            <button class="w-full bg-[#D7FF00] text-black font-black text-lg py-3 hover:bg-white transition-colors uppercase font-mono cursor-none-target">
-                CONFIRM CUT
-            </button>
         </div>
     </div>
 
-    <!-- 
-      ELITE FIX: 
-      Moved cursor div to the very end of DOM to ensure it paints last 
-      regardless of Z-Index battles in complex stacking contexts.
-    -->
-    <div class="cursor-spray"></div>
+    <!-- DOM Rendering Target for Cursor Engine -->
+    <div class="cursor-dot" aria-hidden="true"></div>
+    <div class="cursor-ring" aria-hidden="true"></div>
 
     <script>
-        // --- 1. 3D TEXT ENGINE ---
-        const words = document.querySelectorAll('.word-3d');
-        words.forEach(word => {
-            const text = word.textContent;
-            word.textContent = '';
-            text.split('').forEach((char, index) => {
-                const span = document.createElement('span');
-                span.textContent = char;
-                span.className = 'char-3d';
-                span.style.display = 'inline-block';
-                word.appendChild(span);
-            });
-        });
+        document.addEventListener('DOMContentLoaded', () => {
+            'use strict';
 
-        // --- 2. CURSOR & INTERACTION LOGIC (OPTIMIZED) ---
-        const cursor = document.querySelector('.cursor-spray');
-        
-        // Performance: Use requestAnimationFrame for cursor movement
-        let mouseX = 0;
-        let mouseY = 0;
-        let isMoving = false;
+            const lerp = (start, end, factor) => start + (end - start) * factor;
 
-        document.addEventListener('mousemove', (e) => {
-            // Hard Mobile Check: Stop execution if mobile to save battery/cpu
-            if (window.innerWidth <= 768) return;
-
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-
-            if (!isMoving) {
-                isMoving = true;
-                requestAnimationFrame(updateCursor);
-            }
-            
-            // 3D Text Rotation Logic (kept simple in event loop for responsiveness)
-            const xNorm = (e.clientX / window.innerWidth - 0.5) * 2;
-            const yNorm = (e.clientY / window.innerHeight - 0.5) * 2;
-            
-            // Limit query selector calls for performance (optional refinement)
-            const chars = document.querySelectorAll('.char-3d');
-            chars.forEach((char, index) => {
-                const factor = 10 + (index % 3) * 5; 
-                const rotateX = -yNorm * factor;
-                const rotateY = xNorm * factor;
-                char.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(${Math.abs(xNorm*30)}px)`;
-            });
-        });
-
-        function updateCursor() {
-            if(cursor) {
-                cursor.style.top = mouseY + 'px';
-                cursor.style.left = mouseX + 'px';
-            }
-            isMoving = false;
-        }
-
-        // --- 3. SCROLL & MODAL ---
-        const lenis = new Lenis();
-        function raf(time) {
-            lenis.raf(time);
-            requestAnimationFrame(raf);
-        }
-        requestAnimationFrame(raf);
-
-        // Modal Logic
-        const modal = document.getElementById('bookingModal');
-        const modalBarber = document.getElementById('modalBarber');
-        const modalTime = document.getElementById('modalTime');
-        
-        window.openModal = function(barber, time) {
-            modalBarber.innerText = barber;
-            modalTime.innerText = time;
-            modal.classList.remove('hidden');
-        }
-        
-        window.closeModal = function() {
-            modal.classList.add('hidden');
-        }
-        
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
-
-        // Cursor Interactive States (Hover effects)
-        const targets = document.querySelectorAll('.cursor-none-target');
-        if(cursor) {
-            targets.forEach(t => {
-                t.addEventListener('mouseenter', () => {
-                    if (window.innerWidth <= 768) return;
-                    cursor.style.transform = 'translate(-50%, -50%) scale(2.5)';
-                    cursor.style.boxShadow = '0 0 20px #fff';
-                    cursor.style.backgroundColor = '#fff';
-                });
-                t.addEventListener('mouseleave', () => {
-                    if (window.innerWidth <= 768) return;
-                    cursor.style.transform = 'translate(-50%, -50%) scale(1)';
-                    cursor.style.boxShadow = '0 0 10px var(--acid)';
-                    cursor.style.backgroundColor = 'var(--acid)';
+            // --- 1. SETUP 3D TEXT ENGINE ---
+            const words = document.querySelectorAll('.word-3d');
+            words.forEach(word => {
+                const text = word.textContent;
+                word.textContent = '';
+                text.split('').forEach(char => {
+                    const span = document.createElement('span');
+                    span.innerHTML = char === ' ' ? '&nbsp;' : char;
+                    span.className = 'char-3d';
+                    word.appendChild(span);
                 });
             });
-        }
+
+            const charElements = document.querySelectorAll('.char-3d');
+            const cursorDot = document.querySelector('.cursor-dot');
+            const cursorRing = document.querySelector('.cursor-ring');
+
+            // --- 2. STATE MANAGEMENT ---
+            const state = {
+                targetX: 0, targetY: 0,
+                currentX: 0, currentY: 0,
+                mouseX: window.innerWidth / 2, mouseY: window.innerHeight / 2,
+                cursorDotX: window.innerWidth / 2, cursorDotY: window.innerHeight / 2,
+                cursorRingX: window.innerWidth / 2, cursorRingY: window.innerHeight / 2
+            };
+
+            // --- 3. UNCONDITIONAL INPUT LISTENERS ---
+            // Fixes the resize disconnect issue entirely.
+            window.addEventListener('mousemove', (e) => {
+                state.mouseX = e.clientX;
+                state.mouseY = e.clientY;
+                state.targetX = (e.clientX / window.innerWidth - 0.5) * 2;
+                state.targetY = (e.clientY / window.innerHeight - 0.5) * 2;
+            });
+
+            window.addEventListener('deviceorientation', (e) => {
+                if (e.gamma === null || e.beta === null) return;
+                let x = Math.max(-45, Math.min(45, e.gamma)) / 45;
+                let y = Math.max(-45, Math.min(45, e.beta - 45)) / 45; 
+                state.targetX = x;
+                state.targetY = y;
+            }, true);
+
+            document.querySelectorAll('.interactive-target').forEach(el => {
+                el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+                el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+                // Focus mappings to mirror mouse hover behavior for visual feedback
+                el.addEventListener('focus', () => document.body.classList.add('cursor-hover'));
+                el.addEventListener('blur', () => document.body.classList.remove('cursor-hover'));
+            });
+
+            // --- 4. ENGINE & SYNC ---
+            // Bind Lenis directly to GSAP ticker to eliminate scroll micro-stutters
+            const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+            lenis.on('scroll', ScrollTrigger.update);
+            
+            gsap.ticker.add((time) => {
+                lenis.raf(time * 1000); // GSAP provides time in seconds, lenis expects ms
+            });
+            gsap.ticker.lagSmoothing(0);
+
+            // Separate visual rendering loop for pure canvas math decoupling
+            function renderLoop(time) {
+                state.currentX = lerp(state.currentX, state.targetX, 0.08);
+                state.currentY = lerp(state.currentY, state.targetY, 0.08);
+                state.cursorDotX = lerp(state.cursorDotX, state.mouseX, 0.3);
+                state.cursorDotY = lerp(state.cursorDotY, state.mouseY, 0.3);
+                state.cursorRingX = lerp(state.cursorRingX, state.mouseX, 0.15);
+                state.cursorRingY = lerp(state.cursorRingY, state.mouseY, 0.15);
+
+                // Fix: explicit pixel strings prevent WebKit calc() parse failures in translate3d.
+                cursorDot.style.transform = `translate3d(${state.cursorDotX}px, ${state.cursorDotY}px, 0) translate(-50%, -50%)`;
+                cursorRing.style.transform = `translate3d(${state.cursorRingX}px, ${state.cursorRingY}px, 0) translate(-50%, -50%)`;
+
+                if (window.scrollY < window.innerHeight) {
+                    const zDepth = Math.abs(state.currentX * 40);
+                    charElements.forEach((char, index) => {
+                        const wave = Math.sin(index * 0.5 + time * 0.002) * 5;
+                        const factor = 15 + (index % 4) * 3; 
+                        const rotateX = -state.currentY * factor + wave;
+                        const rotateY = state.currentX * factor;
+                        char.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translate3d(0, 0, ${zDepth}px)`;
+                    });
+                }
+                requestAnimationFrame(renderLoop);
+            }
+            requestAnimationFrame(renderLoop);
+
+            // --- 5. GSAP ANIMATIONS ---
+            gsap.registerPlugin(ScrollTrigger);
+
+            gsap.to('#text-container', {
+                scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true },
+                y: 200, opacity: 0, scale: 0.9
+            });
+
+            document.querySelectorAll('.roster-panel').forEach(panel => {
+                const bg = panel.querySelector('.parallax-bg');
+                
+                // Fix: scale 1.2 ensures vertical translation doesn't expose clipping bounds
+                gsap.set(bg, { scale: 1.2 });
+                
+                gsap.fromTo(bg, 
+                    { yPercent: -10 },
+                    { yPercent: 10, ease: 'none', scrollTrigger: { trigger: panel, start: 'top bottom', end: 'bottom top', scrub: true } }
+                );
+
+                const tl = gsap.timeline({ scrollTrigger: { trigger: panel, start: 'top 70%' } });
+                tl.fromTo(panel.querySelector('.reveal-text'), { y: '100%' }, { y: '0%', duration: 0.6, ease: 'power3.out' })
+                  .fromTo(panel.querySelector('.reveal-title'), { y: '120%', rotationX: -20 }, { y: '0%', rotationX: 0, duration: 0.8, ease: 'power4.out' }, "-=0.4")
+                  .fromTo(panel.querySelector('.reveal-content'), { opacity: 0, x: panel.classList.contains('justify-end') ? 30 : -30 }, { opacity: 1, x: 0, duration: 0.8, ease: 'power2.out' }, "-=0.4");
+            });
+
+            // --- 6. MODAL & ACCESSIBILITY TRAP ---
+            const modal = document.getElementById('bookingModal');
+            const modalContent = modal.querySelector('.modal-content');
+            const closeBtn = document.getElementById('closeModalBtn');
+            let previousFocus = null;
+            let modalTimeline = gsap.timeline({ paused: true });
+            
+            modalTimeline
+                .set(modal, { display: 'flex' })
+                .to(modal, { opacity: 1, duration: 0.3, pointerEvents: 'auto' })
+                .fromTo(modalContent, { scale: 0.95, y: 20, rotationX: 10 }, { scale: 1, y: 0, rotationX: 0, duration: 0.5, ease: 'back.out(1.5)' }, "<");
+
+            const openModal = function() {
+                previousFocus = document.activeElement;
+                document.getElementById('modalBarber').innerText = this.getAttribute('data-barber');
+                document.getElementById('modalTime').innerText = this.getAttribute('data-time');
+                document.getElementById('modalPrice').innerText = this.getAttribute('data-price');
+                lenis.stop();
+                modalTimeline.play().then(() => closeBtn.focus());
+            };
+
+            const closeModal = () => {
+                modalTimeline.reverse().then(() => {
+                    modal.style.display = 'none';
+                    lenis.start();
+                    if(previousFocus) previousFocus.focus();
+                });
+            };
+
+            // Bind triggers (Click & Keyboard)
+            document.querySelectorAll('.slip-row[data-barber]').forEach(row => {
+                row.addEventListener('click', openModal);
+                row.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openModal.call(this);
+                    }
+                });
+            });
+
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
+            
+            // Focus Trap inside Modal
+            document.addEventListener('keydown', (e) => { 
+                if (modal.style.display === 'flex') {
+                    if (e.key === 'Escape') closeModal();
+                    if (e.key === 'Tab') {
+                        const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                        const firstElement = focusableElements[0];
+                        const lastElement = focusableElements[focusableElements.length - 1];
+
+                        if (e.shiftKey) {
+                            if (document.activeElement === firstElement) {
+                                lastElement.focus();
+                                e.preventDefault();
+                            }
+                        } else {
+                            if (document.activeElement === lastElement) {
+                                firstElement.focus();
+                                e.preventDefault();
+                            }
+                        }
+                    }
+                }
+            });
+        });
     </script>
 </body>
 </html>
